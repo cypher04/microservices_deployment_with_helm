@@ -1,0 +1,8 @@
+output "subnet_ids" {
+    value = {
+        web     = azurerm_subnet.web.id
+        app     = azurerm_subnet.app.id
+        aks     = azurerm_subnet.aks_subnet.id
+        database = azurerm_subnet.database.id
+    }
+}

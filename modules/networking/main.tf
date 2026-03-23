@@ -21,7 +21,7 @@ resource "azurerm_subnet" "app" {
 }
 
 
-resource "azurerm_subnet" "aks" {
+resource "azurerm_subnet" "aks_subnet" {
     name                 = "aks-subnet"
     resource_group_name  = var.resource_group_name
     virtual_network_name = azurerm_virtual_network.vnet.name
@@ -29,9 +29,9 @@ resource "azurerm_subnet" "aks" {
 }
 
 resource "azurerm_subnet" "database" {
-    name                 = "db-subnet"
+    name                 = "database-subnet"
     resource_group_name  = var.resource_group_name
     virtual_network_name = azurerm_virtual_network.vnet.name
-    address_prefixes     = [var.subnet_prefixes["db"]]
+    address_prefixes     = [var.subnet_prefixes["database"]]
 }
 
