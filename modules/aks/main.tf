@@ -3,6 +3,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     location            = var.location
     resource_group_name = var.resource_group_name
     dns_prefix          = "${var.aks_cluster_name}-dns"
+    sku_tier           = "Standard"
+    
     
     default_node_pool {
         name       = "default"
@@ -14,8 +16,15 @@ resource "azurerm_kubernetes_cluster" "aks" {
     identity {
         type = "SystemAssigned"
     }
-}
 
+
+    network_profile {
+        network_plugin    = "azure"
+        
+        service_cidr      = "10.2.0.0/16"
+        dns_service_ip    = "10.2.0.10"
+}
+}
 
 resource "azurerm_role_assignment" "aks-acr" {
   scope                = var.acr_id
