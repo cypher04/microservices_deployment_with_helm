@@ -5,7 +5,7 @@ resource "azurerm_private_dns_zone" "pdz" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "pdz_vnet_link" {
-    name                  = "pdz-vnet-link-"
+    name                  = "pdzvnetlink"
     resource_group_name   = var.resource_group_name
     private_dns_zone_name = azurerm_private_dns_zone.pdz.name
     virtual_network_id    = var.vnet_id
@@ -24,7 +24,7 @@ resource "azurerm_private_endpoint" "pe-appservice" {
     name                           = "psc-appservice"
     private_connection_resource_id = var.acr_id
     is_manual_connection           = false
-    subresource_names              = ["sites"]
+    subresource_names              = ["registry"]
   }
 
   private_dns_zone_group {
