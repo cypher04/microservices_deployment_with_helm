@@ -6,6 +6,10 @@ resource "azurerm_resource_group" "helm" {
 data "azurerm_client_config" "current" {
 }
 
+resource "helm_release" "myapp" {
+    name       = "myapp"
+    chart = "../../myapp"
+}
 
 
 module "compute" {
@@ -37,4 +41,25 @@ module "aks" {
   subnet_prefixes = var.subnet_prefixes
   subnet_ids = module.networking.subnet_ids
   acr_id = module.compute.acr_id
+}
+
+resource "null_resource" "update_kubeconfig" {
+  triggers = {
+    cluster_id = module.aks.aks_id
+  }
+
+  provisioner "local-exec" {
+    command = "az aks get-credentials --resource-group ${azurerm_resource_group.helm.name} --name ${var.aks_cluster_name} --overwrite-existing"
+  }
+}
+
+
+module "private_endpoint" {
+  source              = "../../modules/private_endpoint"
+
+  location            = var.location
+  resource_group_name      = azurerm_resource_group.helm.name
+  acr_id = module.compute.acr_id
+  vnet_id = module.networking.vnet_id
+  subnet_ids = module.networking.subnet_ids
 }
