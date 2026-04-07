@@ -25,3 +25,8 @@ variable "acr_id" {
     type        = string
 }
 
+variable "database_subnet" {
+    description = "The ID of the subnet to be used for the PostgreSQL server private endpoint."
+    type        = string
+}
+
