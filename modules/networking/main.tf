@@ -33,5 +33,12 @@ resource "azurerm_subnet" "database" {
     resource_group_name  = var.resource_group_name
     virtual_network_name = azurerm_virtual_network.vnet.name
     address_prefixes     = [var.subnet_prefixes["database"]]
+    delegation {
+        name = "database-delegation"
+        service_delegation {
+            name    = "Microsoft.DBforPostgreSQL/flexibleServers"
+            actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+        }
+    }
 }
 
