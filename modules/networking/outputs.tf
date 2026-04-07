@@ -10,3 +10,7 @@ output "subnet_ids" {
 output "vnet_id" {
     value = azurerm_virtual_network.vnet.id
 }
+
+output "database_subnet" {
+    value = azurerm_subnet.database.id
+}
