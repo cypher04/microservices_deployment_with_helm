@@ -9,6 +9,11 @@ data "azurerm_client_config" "current" {
 resource "helm_release" "myapp" {
     name       = "myapp"
     chart = "../../myapp"
+    namespace = "myapp"
+    wait = false
+    timeout = 1200
+
+    depends_on = [module.aks, null_resource.update_kubeconfig]
 }
 
 
@@ -41,6 +46,13 @@ module "aks" {
   subnet_prefixes = var.subnet_prefixes
   subnet_ids = module.networking.subnet_ids
   acr_id = module.compute.acr_id
+  db_host = var.db_host
+  db_name = var.db_name
+  db_user = var.db_user
+  db_password = var.db_password
+  log_analytics_id = module.monitoring.log_analytics_id
+  # postgresql_admin_username = var.postgresql_admin_username
+  # postgresql_admin_password = var.postgresql_admin_password
 }
 
 resource "null_resource" "update_kubeconfig" {
@@ -62,4 +74,27 @@ module "private_endpoint" {
   acr_id = module.compute.acr_id
   vnet_id = module.networking.vnet_id
   subnet_ids = module.networking.subnet_ids
+  database_subnet = module.networking.database_subnet
+}
+
+
+module "database" {
+  source              = "../../modules/database"
+
+  location            = var.location
+  resource_group_name      = azurerm_resource_group.helm.name
+  postgresql_admin_username = var.postgresql_admin_username
+  postgresql_admin_password = var.postgresql_admin_password
+  subnet_ids = module.networking.subnet_ids
+  private_dns_zone_vl_id = module.private_endpoint.private_dns_zone_vl_id
+  
+}
+
+
+module "monitoring" {
+  source              = "../../modules/monitoring"
+
+  location            = var.location
+  resource_group_name      = azurerm_resource_group.helm.name
+
 }
