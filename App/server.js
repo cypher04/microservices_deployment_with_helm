@@ -1,38 +1,34 @@
 const express = require("express");
-const sql = require("mssql");
+const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// SQL Server connection config from environment variables
-const dbConfig = {
-  server: process.env.DB_HOST,
+// PostgreSQL Flexible Server connection config from environment variables
+const pool = new Pool({
+  host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || "1433", 10),
-  options: {
-    encrypt: true,
-    trustServerCertificate: false,
+  port: parseInt(process.env.DB_PORT || "5432", 10),
+  ssl: {
+    rejectUnauthorized: false,
   },
-};
-
-let pool;
+});
 
 async function connectDb() {
   try {
-    pool = await sql.connect(dbConfig);
-    console.log("Connected to SQL Server");
+    await pool.query("SELECT 1");
+    console.log("Connected to PostgreSQL");
 
     // Create a sample table if it doesn't exist
-    await pool.request().query(`
-      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='items' AND xtype='U')
-      CREATE TABLE items (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        name NVARCHAR(255) NOT NULL,
-        created_at DATETIME2 DEFAULT GETDATE()
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS items (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
     console.log("Table 'items' is ready");
@@ -49,8 +45,8 @@ app.get("/health", (req, res) => {
 // Get all items
 app.get("/items", async (req, res) => {
   try {
-    const result = await pool.request().query("SELECT * FROM items ORDER BY created_at DESC");
-    res.json(result.recordset);
+    const result = await pool.query("SELECT * FROM items ORDER BY created_at DESC");
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -63,11 +59,11 @@ app.post("/items", async (req, res) => {
     return res.status(400).json({ error: "name is required" });
   }
   try {
-    const result = await pool
-      .request()
-      .input("name", sql.NVarChar, name)
-      .query("INSERT INTO items (name) OUTPUT INSERTED.* VALUES (@name)");
-    res.status(201).json(result.recordset[0]);
+    const result = await pool.query(
+      "INSERT INTO items (name) VALUES ($1) RETURNING *",
+      [name]
+    );
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -76,14 +72,14 @@ app.post("/items", async (req, res) => {
 // Get item by id
 app.get("/items/:id", async (req, res) => {
   try {
-    const result = await pool
-      .request()
-      .input("id", sql.Int, parseInt(req.params.id, 10))
-      .query("SELECT * FROM items WHERE id = @id");
-    if (result.recordset.length === 0) {
+    const result = await pool.query(
+      "SELECT * FROM items WHERE id = $1",
+      [parseInt(req.params.id, 10)]
+    );
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "item not found" });
     }
-    res.json(result.recordset[0]);
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -92,11 +88,11 @@ app.get("/items/:id", async (req, res) => {
 // Delete item by id
 app.delete("/items/:id", async (req, res) => {
   try {
-    const result = await pool
-      .request()
-      .input("id", sql.Int, parseInt(req.params.id, 10))
-      .query("DELETE FROM items WHERE id = @id");
-    if (result.rowsAffected[0] === 0) {
+    const result = await pool.query(
+      "DELETE FROM items WHERE id = $1",
+      [parseInt(req.params.id, 10)]
+    );
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: "item not found" });
     }
     res.json({ message: "item deleted" });
