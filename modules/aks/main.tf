@@ -24,6 +24,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
         service_cidr      = "10.2.0.0/16"
         dns_service_ip    = "10.2.0.10"
 }
+
+  oms_agent {
+    log_analytics_workspace_id = var.log_analytics_id
+  }
 }
 
 resource "azurerm_role_assignment" "aks-acr" {
@@ -33,3 +37,29 @@ resource "azurerm_role_assignment" "aks-acr" {
   
 }
 
+resource "kubernetes_namespace_v1" "myapp" {
+  metadata {
+    name = "myapp"
+  }
+
+  depends_on = [azurerm_kubernetes_cluster.aks]
+}
+
+resource "kubernetes_secret_v1" "example" {
+  metadata {
+    name      = "basic-auth"
+    namespace = kubernetes_namespace_v1.myapp.metadata[0].name
+  }
+
+  depends_on = [kubernetes_namespace_v1.myapp]
+
+  data = {
+    username = var.db_user
+    password = var.db_password
+    host     = var.db_host
+    name     = var.db_name
+    db_port  = "5432"
+  }
+
+  type = "Opaque"
+}

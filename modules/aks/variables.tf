@@ -39,3 +39,28 @@ variable "acr_id" {
     description = "The ID of the Azure Container Registry."
     type        = string
 }
+
+variable "db_host" {
+    description = "The hostname of the database."
+    type        = string
+}
+
+variable "db_name" {
+    description = "The name of the database."
+    type        = string
+}
+
+variable "db_user" {
+    description = "The username for the database."
+    type        = string
+}
+
+variable "db_password" {
+    description = "The password for the database."
+    type        = string
+}
+
+variable "log_analytics_id" {
+    description = "The ID of the Log Analytics workspace for monitoring."
+    type        = string
+}

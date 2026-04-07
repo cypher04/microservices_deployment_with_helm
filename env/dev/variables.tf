@@ -38,3 +38,35 @@ variable "subnet_prefixes" {
     description = "A map of subnet names to their respective CIDR prefixes."
     type        = map(string)
 }
+
+variable "db_user" {
+    description = "The username for the database."
+    type        = string
+}
+
+variable "db_password" {
+    description = "The password for the database."
+    type        = string
+    sensitive   = true
+}
+
+variable "db_host" {
+    description = "The hostname of the database server."
+    type        = string
+}
+
+variable "db_name" {
+    description = "The name of the database."
+    type        = string
+}
+
+variable "postgresql_admin_username" {
+    description = "The administrator username for the PostgreSQL server."
+    type        = string
+}
+
+variable "postgresql_admin_password" {
+    description = "The administrator password for the PostgreSQL server."
+    type        = string
+    sensitive   = true
+}
