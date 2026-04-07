@@ -40,6 +40,34 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: basic-auth
+                  key: host
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: basic-auth
+                  key: name
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: basic-auth
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: basic-auth
+                  key: password
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: basic-auth
+                  key: db_port
+            - name: PORT
+              value: "3000"
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
